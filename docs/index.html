@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Seven Morris — Mac Apps</title>
+  <meta name="description" content="Small, native macOS apps that each do one job: podcast audio prep, clip leveling, film audio extraction, audio conversion, guest recording, key management and password fetching.">
+  <link rel="icon" type="image/png" href="icons/transcoder.png">
+  <meta property="og:title" content="Seven Morris — Mac Apps">
+  <meta property="og:description" content="Small, native macOS apps that each do one job. Signed, notarized, free and open source.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* House style shared with the app pages (WaxOnWaxOff, Transcoder, …). */
+    :root {
+      --black:     #0e0e0e;
+      --dark:      #1a1816;
+      --mid:       #242018;
+      --light:     #f2ead8;
+      --cream:     #e8dfc8;
+      --muted:     #9c8a6a;
+      --orange:    #d4520a;
+      --orange-lt: #e8641c;
+      --border:    rgba(156,138,106,0.2);
+      --font-disp: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      --font-ui:   'Barlow Condensed', 'Arial Narrow', sans-serif;
+      --font-body: 'Barlow', Arial, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--dark);
+      color: var(--light);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    a { color: var(--orange); text-decoration: none; }
+    a:hover { color: var(--orange-lt); }
+
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ── Top bar ── */
+
+    .topbar { border-bottom: 1px solid var(--border); padding: 14px 0; }
+    .topbar .page { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .topbar-brand {
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      color: var(--light);
+    }
+    .topbar-links { display: flex; gap: 24px; }
+    .topbar-links a {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.15s;
+    }
+    .topbar-links a:hover { color: var(--orange-lt); }
+
+    /* ── Hero ── */
+
+    .hero { padding-top: 84px; padding-bottom: 64px; }
+    .eyebrow {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      font-family: var(--font-disp);
+      font-weight: 400;
+      font-size: clamp(3.2rem, 8vw, 6.2rem);
+      letter-spacing: 0.01em;
+      line-height: 0.92;
+      color: var(--light);
+      max-width: 12ch;
+    }
+    .hero h1 em { font-style: normal; color: var(--orange); }
+    .hero-lede {
+      margin-top: 24px;
+      font-size: 1.18rem;
+      color: var(--cream);
+      max-width: 560px;
+      line-height: 1.55;
+    }
+
+    .dock {
+      margin-top: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .dock a { display: block; transition: transform 0.15s; }
+    .dock a:hover { transform: translateY(-4px); }
+    .dock img { width: 60px; height: 60px; display: block; }
+
+    /* ── Promises strip ── */
+
+    .promises {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .promise { padding: 22px 20px 22px 0; }
+    .promise + .promise { padding-left: 20px; border-left: 1px solid var(--border); }
+    .promise h3 {
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--light);
+      margin-bottom: 4px;
+    }
+    .promise p { font-size: 0.92rem; color: var(--muted); line-height: 1.45; }
+
+    /* ── App sections ── */
+
+    .group { padding-top: 72px; padding-bottom: 8px; }
+    .group-head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .group-head h2 {
+      font-family: var(--font-disp);
+      font-weight: 400;
+      font-size: 2.6rem;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    .group-head p {
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      background: var(--mid);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      transition: border-color 0.15s;
+    }
+    .app:hover { border-color: rgba(212,82,10,0.45); }
+
+    .app-head { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+    .app-head img { width: 64px; height: 64px; flex: none; }
+    .app h3 {
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+    }
+    .app h3 a { color: var(--light); }
+    .app h3 a:hover { color: var(--orange-lt); }
+    .app-kind {
+      font-family: var(--font-ui);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    .app-desc { color: var(--cream); font-size: 0.98rem; margin-bottom: 14px; }
+
+    .app ul { list-style: none; margin-bottom: 20px; }
+    .app li {
+      position: relative;
+      padding-left: 16px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    .app li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.62em;
+      width: 6px;
+      height: 2px;
+      background: var(--orange);
+    }
+
+    .app code {
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 0.85em;
+      color: var(--cream);
+    }
+
+    .app-foot {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 8px 18px;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--orange);
+      color: var(--black);
+      border-radius: 3px;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--orange-lt); color: var(--black); }
+
+    .link {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .link:hover { color: var(--orange-lt); }
+
+    .app-meta {
+      width: 100%;
+      font-family: var(--font-ui);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.85;
+    }
+    .app-meta .ver { color: var(--cream); }
+
+    /* ── Footer ── */
+
+    footer {
+      margin-top: 88px;
+      border-top: 1px solid var(--border);
+      padding: 28px 0 48px;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    footer .page { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+    /* ── Narrow screens ── */
+
+    @media (max-width: 820px) {
+      .promises { grid-template-columns: repeat(2, 1fr); }
+      .promise:nth-child(3) { padding-left: 0; border-left: none; }
+      .promise:nth-child(n+3) { border-top: 1px solid var(--border); }
+    }
+
+    @media (max-width: 560px) {
+      .page { padding: 0 16px; }
+      .topbar-links { display: none; }
+      .hero { padding-top: 56px; padding-bottom: 44px; }
+      .dock { gap: 8px; }
+      .dock img { width: 42px; height: 42px; }
+      .promises { grid-template-columns: 1fr; }
+      .promise, .promise + .promise { padding: 16px 0; border-left: none; }
+      .promise + .promise { border-top: 1px solid var(--border); }
+      .group { padding-top: 56px; }
+      .group-head { flex-direction: column; gap: 4px; }
+      .apps { grid-template-columns: 1fr; }
+      .app { padding: 20px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .dock a, .app, .btn { transition: none; }
+      .dock a:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="page">
+      <span class="topbar-brand">SEVEN MORRIS</span>
+      <nav class="topbar-links" aria-label="Sections">
+        <a href="#audio">Audio</a>
+        <a href="#utilities">Utilities</a>
+        <a href="https://github.com/sevmorris">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page hero">
+      <p class="eyebrow">Apps for macOS</p>
+      <h1>Small tools that do <em>one job</em> well.</h1>
+      <p class="hero-lede">
+        Native Mac apps, built for my own podcast and audio work and shared for anyone
+        with the same problems. Drop a file in, get the right file out.
+      </p>
+      <div class="dock" aria-label="All apps">
+        <a href="#waxonwaxoff" title="WaxOn/WaxOff"><img src="icons/waxonwaxoff.png" alt="WaxOn/WaxOff"></a>
+        <a href="#cliphack" title="ClipHack"><img src="icons/cliphack.png" alt="ClipHack"></a>
+        <a href="#filmstrip" title="FilmStrip"><img src="icons/filmstrip.png" alt="FilmStrip"></a>
+        <a href="#transcoder" title="Transcoder"><img src="icons/transcoder.png" alt="Transcoder"></a>
+        <a href="#doublender" title="DoublEnder"><img src="icons/doublender.png" alt="DoublEnder"></a>
+        <a href="#keyvault" title="KeyVault"><img src="icons/keyvault.png" alt="KeyVault"></a>
+        <a href="#ppg" title="Perfect Passwords Grabber"><img src="icons/ppg.png" alt="Perfect Passwords Grabber"></a>
+      </div>
+    </section>
+
+    <div class="page">
+      <div class="promises">
+        <div class="promise">
+          <h3>Signed &amp; notarized</h3>
+          <p>Developer ID signed and notarized by Apple. Open it with no Gatekeeper warning.</p>
+        </div>
+        <div class="promise">
+          <h3>Update themselves</h3>
+          <p>Each app checks GitHub for a new version and installs it in place.</p>
+        </div>
+        <div class="promise">
+          <h3>Free &amp; open source</h3>
+          <p>MIT or GPL. Read the code, build it yourself, file an issue.</p>
+        </div>
+        <div class="promise">
+          <h3>macOS 15 or later</h3>
+          <p>Built for Apple silicon. DoublEnder also runs on Intel Macs.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Audio ── -->
+    <section class="page group" id="audio">
+      <div class="group-head">
+        <h2>Audio</h2>
+        <p>Prep, level, extract, convert, record.</p>
+      </div>
+      <div class="apps">
+
+        <article class="app" id="waxonwaxoff" data-repo="sevmorris/WaxOnWaxOff">
+          <div class="app-head">
+            <img src="icons/waxonwaxoff.png" alt="">
+            <div>
+              <h3><a href="https://sevmorris.github.io/WaxOnWaxOff/">WaxOn/WaxOff</a></h3>
+              <span class="app-kind">Podcast audio prep</span>
+            </div>
+          </div>
+          <p class="app-desc">Two modes in one app. WaxOn turns a quiet, uneven guest recording into a clean prep WAV before you edit. WaxOff normalizes the finished mix to your delivery spec.</p>
+          <ul>
+            <li>Signal conditioning for ingest</li>
+            <li>Broadcast loudness normalization for delivery</li>
+            <li>Everything stays on your Mac</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/WaxOnWaxOff/releases/latest">Download</a>
+            <a class="link" href="https://sevmorris.github.io/WaxOnWaxOff/">App page</a>
+            <a class="link" href="https://github.com/sevmorris/WaxOnWaxOff">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+        <article class="app" id="cliphack" data-repo="sevmorris/ClipHack-releases">
+          <div class="app-head">
+            <img src="icons/cliphack.png" alt="">
+            <div>
+              <h3><a href="https://sevmorris.github.io/ClipHack/">ClipHack</a></h3>
+              <span class="app-kind">Broadcast clip prep</span>
+            </div>
+          </div>
+          <p class="app-desc">Gets third-party clips (news, promos, broadcast audio) to sit at the same level as the rest of your show.</p>
+          <ul>
+            <li>Dynamic leveling across speakers</li>
+            <li>Two-pass EBU R128 loudness to your target</li>
+            <li>Brick-wall peak ceiling; downloads clips from the web</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/ClipHack-releases/releases/latest">Download</a>
+            <a class="link" href="https://sevmorris.github.io/ClipHack/manual/">Manual</a>
+            <a class="link" href="https://github.com/sevmorris/ClipHack">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+        <article class="app" id="filmstrip" data-repo="sevmorris/FilmStrip">
+          <div class="app-head">
+            <img src="icons/filmstrip.png" alt="">
+            <div>
+              <h3><a href="https://sevmorris.github.io/FilmStrip/manual/">FilmStrip</a></h3>
+              <span class="app-kind">Film audio extraction</span>
+            </div>
+          </div>
+          <p class="app-desc">Pulls the soundtrack out of movies and TV episodes so you can listen to them like audiobooks.</p>
+          <ul>
+            <li>Scans MKV, MP4, MOV and AVI containers</li>
+            <li>Picks the right language and track for you</li>
+            <li>Writes portable audio files</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/FilmStrip/releases/latest">Download</a>
+            <a class="link" href="https://sevmorris.github.io/FilmStrip/manual/">Manual</a>
+            <a class="link" href="https://github.com/sevmorris/FilmStrip">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+        <article class="app" id="transcoder" data-repo="sevmorris/Transcoder">
+          <div class="app-head">
+            <img src="icons/transcoder.png" alt="">
+            <div>
+              <h3><a href="https://sevmorris.github.io/Transcoder/manual/">Transcoder</a></h3>
+              <span class="app-kind">Audio converter</span>
+            </div>
+          </div>
+          <p class="app-desc">Drop files in, pick a format, convert. From a video it takes the first audio track and nothing else.</p>
+          <ul>
+            <li>MP3, AAC, Apple Lossless, FLAC, WAV, AIFF, Opus</li>
+            <li>Presets per format; batch queue with per-file progress</li>
+            <li>Tags and cover art carried over</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/Transcoder/releases/latest">Download</a>
+            <a class="link" href="https://sevmorris.github.io/Transcoder/manual/">Manual</a>
+            <a class="link" href="https://github.com/sevmorris/Transcoder">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+        <article class="app" id="doublender" data-repo="sevmorris/DoublEnder">
+          <div class="app-head">
+            <img src="icons/doublender.png" alt="">
+            <div>
+              <h3><a href="https://sevmorris.github.io/DoublEnder/">DoublEnder</a></h3>
+              <span class="app-kind">Guest recorder</span>
+            </div>
+          </div>
+          <p class="app-desc">Send it to a podcast guest. They pick a microphone, press the one button, and send you the file. No setup, no account, no cloud.</p>
+          <ul>
+            <li>Records AAC to the Desktop</li>
+            <li>Runs from anywhere, no installer</li>
+            <li>Apple silicon and Intel</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/DoublEnder/releases/latest">Download</a>
+            <a class="link" href="https://sevmorris.github.io/DoublEnder/">App page</a>
+            <a class="link" href="https://github.com/sevmorris/DoublEnder">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ── Utilities ── -->
+    <section class="page group" id="utilities">
+      <div class="group-head">
+        <h2>Utilities</h2>
+        <p>Keys, secrets and passwords.</p>
+      </div>
+      <div class="apps">
+
+        <article class="app" id="keyvault" data-repo="sevmorris/KeyVault">
+          <div class="app-head">
+            <img src="icons/keyvault.png" alt="">
+            <div>
+              <h3><a href="https://sevmorris.github.io/KeyVault/manual/">KeyVault</a></h3>
+              <span class="app-kind">Keys &amp; secrets</span>
+            </div>
+          </div>
+          <p class="app-desc">One window over your SSH, GPG and Age keys, plus an encrypted store for API keys, notes and files under a master passphrase.</p>
+          <ul>
+            <li>Finds, shows and generates keys</li>
+            <li>Secrets kept in the macOS Keychain</li>
+            <li>Backup any <code>gpg</code> can open, with or without KeyVault</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/KeyVault/releases/latest">Download</a>
+            <a class="link" href="https://sevmorris.github.io/KeyVault/manual/">Manual</a>
+            <a class="link" href="https://github.com/sevmorris/KeyVault">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+        <article class="app" id="ppg" data-repo="sevmorris/ppg">
+          <div class="app-head">
+            <img src="icons/ppg.png" alt="">
+            <div>
+              <h3><a href="https://github.com/sevmorris/ppg">Perfect Passwords Grabber</a></h3>
+              <span class="app-kind">Password fetcher</span>
+            </div>
+          </div>
+          <p class="app-desc">Fetches three fresh, truly random passwords from GRC's Ultra High Security Password Generator and copies one with a click.</p>
+          <ul>
+            <li>64-char hex, 63-char ASCII, 63-char alphanumeric</li>
+            <li>Nothing stored, reused or logged</li>
+            <li>Built-in help on which format to use</li>
+          </ul>
+          <div class="app-foot">
+            <a class="btn" href="https://github.com/sevmorris/ppg/releases/latest">Download</a>
+            <a class="link" href="https://github.com/sevmorris/ppg#readme">Read me</a>
+            <a class="link" href="https://github.com/sevmorris/ppg">Source</a>
+            <span class="app-meta"></span>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="page">
+      <span>Seven Morris · Apps for macOS</span>
+      <a href="https://github.com/sevmorris">github.com/sevmorris</a>
+    </div>
+  </footer>
+
+  <script>
+    // Fill in each app's current version and point Download straight at its DMG.
+    // The page works without this: every Download already links to the latest
+    // release page, so a failed or rate-limited API call changes nothing.
+    document.querySelectorAll('.app[data-repo]').forEach(async (card) => {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${card.dataset.repo}/releases/latest`,
+                                { headers: { Accept: 'application/vnd.github+json' } });
+        if (!res.ok) return;
+        const rel = await res.json();
+        const dmg = (rel.assets || []).find((a) => a.name.endsWith('.dmg'));
+        if (dmg) card.querySelector('.btn').href = dmg.browser_download_url;
+        const date = new Date(rel.published_at).toLocaleDateString('en-US',
+                       { year: 'numeric', month: 'short', day: 'numeric' });
+        const meta = card.querySelector('.app-meta');
+        meta.innerHTML = '';
+        const ver = document.createElement('span');
+        ver.className = 'ver';
+        ver.textContent = rel.tag_name;
+        meta.append(ver, ` · ${date}`);
+      } catch (_) { /* leave the static links */ }
+    });
+  </script>
+</body>
+</html>
